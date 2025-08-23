@@ -1,0 +1,35 @@
+# Node.js / React
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/.vite/
+frontend/.DS_Store
+
+# Python / Flask
+model_and_api/__pycache__/
+model_and_api/.pynb_checkpoints/
+model_and_api/uploads/        # uploaded MRI images (runtime files)
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+instance/
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Virtual environments
+venv/
+ENV/
+.env/
+*.env
+
+# Logs
+*.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

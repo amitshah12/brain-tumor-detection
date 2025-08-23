@@ -1,0 +1,296 @@
+/* ============================= */
+/* Main Layout - Two Column Split */
+/* ============================= */
+.main-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 5px;
+  margin: 5px;
+}
+
+.left-panel {
+  flex: 1; /* file upload + preview */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-panel {
+  flex: 2; /* prediction results */
+}
+
+/* ============================= */
+/* Image Input Section            */
+/* ============================= */
+.image-input-container {
+  display: flex;
+  flex-direction: column; /* stack input + button + preview */
+  align-items: flex-start;
+  gap: 16px;
+  margin: 20px;
+  padding: 20px;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s ease;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.input-field button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ============================= */
+/* Image Preview                  */
+/* ============================= */
+.image-preview {
+  border-radius: 12px;
+  max-width: 250px;
+  max-height: 250px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 2px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.image-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================= */
+/* Prediction Container           */
+/* ============================= */
+.prediction-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+}
+
+.prediction-container h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 0.5rem;
+}
+
+/* ============================= */
+/* AI-generated HTML Result       */
+/* ============================= */
+.result-html {
+  text-align: left;
+}
+
+.result-html h3 {
+  color: #2980b9;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 1.5rem 0 1rem 0;
+  padding: 0.5rem 0;
+  border-left: 4px solid #3498db;
+  padding-left: 1rem;
+  background: linear-gradient(90deg, #ecf0f1 0%, transparent 100%);
+}
+
+.result-html h4 {
+  color: #34495e;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1.2rem 0 0.8rem 0;
+}
+
+.result-html p {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  text-align: left;
+}
+
+/* Bullet point styling */
+.result-html ul {
+  padding-left: 0;
+  margin: 1rem 0;
+  list-style: none;
+}
+
+.result-html li {
+  margin-bottom: 0.8rem;
+  padding-left: 1.5rem;
+  position: relative;
+  text-align: left;
+  color: #2c3e50;
+}
+
+.result-html li:before {
+  content: "▶";
+  color: #3498db;
+  font-size: 0.8rem;
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+}
+
+.result-html ul ul li:before {
+  content: "▸";
+  color: #95a5a6;
+}
+
+/* Text emphasis */
+.result-html strong,
+.result-html b {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.result-html em,
+.result-html i {
+  font-style: italic;
+  color: #7f8c8d;
+}
+
+.result-html p strong {
+  color: #2980b9;
+  font-size: 1.05rem;
+}
+
+/* ============================= */
+/* Error & Warning Messages       */
+/* ============================= */
+.error {
+  background: #ffe6e6;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error h3 {
+  color: #e74c3c !important;
+  margin-top: 0;
+}
+
+.warning {
+  background: #fff8e1;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.warning h3 {
+  color: #f39c12 !important;
+  margin-top: 0;
+}
+
+/* ============================= */
+/* Loading State                  */
+/* ============================= */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* ============================= */
+/* Responsive Design              */
+/* ============================= */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .image-input-container {
+    align-items: center;
+    gap: 20px;
+  }
+
+  .image-preview {
+    max-width: 200px;
+    max-height: 200px;
+  }
+
+  .result-html h3 {
+    font-size: 1.2rem;
+  }
+
+  .result-html li {
+    padding-left: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================= */
+/* Tumor-specific Color Coding    */
+/* ============================= */
+.result-html.glioma h3:first-of-type {
+  border-left-color: #e74c3c;
+}
+
+.result-html.meningioma h3:first-of-type {
+  border-left-color: #f39c12;
+}
+
+.result-html.pituitary h3:first-of-type {
+  border-left-color: #9b59b6;
+}
+
+.result-html.notumor h3:first-of-type {
+  border-left-color: #27ae60;
+}
+
+
+/**For predict botton**/
+/* General button styling */
+button {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effect */
+button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #2471a3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Active/Pressed effect */
+button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Disabled button (already in your CSS, just refined) */
+button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
