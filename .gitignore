@@ -8,6 +8,7 @@ frontend/.DS_Store
 # Python / Flask
 model_and_api/__pycache__/
 model_and_api/.pynb_checkpoints/
+model_and_api/MRI Images/
 model_and_api/uploads/        # uploaded MRI images (runtime files)
 model_and_api/model.h5
 *.pyc
@@ -34,3 +35,4 @@ ENV/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+"model_and_api/model.h5" 
