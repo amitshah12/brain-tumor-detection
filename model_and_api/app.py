@@ -16,11 +16,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Configure CORS for production (update with your actual frontend URL after deployment)
+# Configure CORS for production
 CORS(app, origins=[
     "https://brain-tumor-frontend.onrender.com",  # Your actual frontend URL
+    "https://brain-rumor-api.onrender.com",       # Allow backend to call itself
     "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:5000"
 ])
+
 
 # Model configuration
 GOOGLE_DRIVE_FILE_ID = "1AFQMBxhUsok-Z6lBJ0zHCFdFLWgNbgmW"
