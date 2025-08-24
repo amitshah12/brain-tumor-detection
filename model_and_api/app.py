@@ -26,12 +26,12 @@ CORS(app, origins=[
     "http://localhost:5000"
 ])
 
-# Model configuration
-GOOGLE_DRIVE_FILE_ID = "1AFQMBxhUsok-Z6lBJ0zHCFdFLWgNbgmW"
-MODEL_URL = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
+# Model configuration - UPDATED FOR DROPBOX
+MODEL_URL = "https://www.dropbox.com/scl/fi/f7icd3hqhyp4bzpvx7y4a/model.h5?rlkey=pql269rlrohs65xp0x3o6b6jz&st=1yllnijy&dl=1"
 MODEL_PATH = "model.h5"
 MODEL_INFO_PATH = "model_info.txt"  # Store model metadata
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_ID = "dropbox_f7icd3hqhyp4bzpvx7y4a"  # Unique identifier for this model
 
 # Default class labels
 class_labels = ['glioma', 'meningioma', 'notumor', 'pituitary']
@@ -39,7 +39,7 @@ class_labels = ['glioma', 'meningioma', 'notumor', 'pituitary']
 def get_model_info():
     """Get expected model information for validation"""
     return {
-        "file_id": GOOGLE_DRIVE_FILE_ID,
+        "model_id": MODEL_ID,
         "min_size": 50 * 1024 * 1024,   # Minimum 50MB
         "max_size": 200 * 1024 * 1024,  # Maximum 200MB
     }
@@ -61,7 +61,7 @@ def is_model_valid():
     if os.path.exists(MODEL_INFO_PATH):
         with open(MODEL_INFO_PATH, 'r') as f:
             stored_info = f.read().strip()
-            if stored_info == GOOGLE_DRIVE_FILE_ID:
+            if stored_info == MODEL_ID:
                 logger.info("Model validation passed - using cached model")
                 return True
     
@@ -70,61 +70,28 @@ def is_model_valid():
 def save_model_info():
     """Save model information after successful download"""
     with open(MODEL_INFO_PATH, 'w') as f:
-        f.write(GOOGLE_DRIVE_FILE_ID)
+        f.write(MODEL_ID)
 
-def download_model_from_drive():
-    """Download model from Google Drive with proper large file handling"""
+def download_model_from_dropbox():
+    """Download model from Dropbox with simple direct download"""
     if is_model_valid():
         logger.info("Valid cached model found, skipping download")
         return True
         
-    logger.info("Downloading model from Google Drive...")
+    logger.info("Downloading model from Dropbox...")
     
     try:
-        # For large files, use the direct download with confirmation
-        session = requests.Session()
-        
-        # First request to get the confirmation token
-        response = session.get(MODEL_URL, params={'id': GOOGLE_DRIVE_FILE_ID}, stream=True)
-        
-        # Check if we need to confirm (for large files)
-        if 'virus scan warning' in response.text.lower() or 'download_warning' in response.text:
-            # Extract confirmation token
-            import re
-            
-            # Try different patterns for confirmation token
-            patterns = [
-                r'name="confirm" value="([^"]+)"',
-                r'confirm=([0-9A-Za-z_]+)',
-                r'"downloadUrl":"[^"]*confirm=([^&"]+)',
-            ]
-            
-            confirm_token = None
-            for pattern in patterns:
-                match = re.search(pattern, response.text)
-                if match:
-                    confirm_token = match.group(1)
-                    break
-            
-            if confirm_token:
-                logger.info(f"Using confirmation token for large file download")
-                # Download with confirmation token
-                params = {
-                    'id': GOOGLE_DRIVE_FILE_ID,
-                    'confirm': confirm_token,
-                    'export': 'download'
-                }
-                response = session.get(
-                    'https://drive.google.com/uc',
-                    params=params,
-                    stream=True,
-                    timeout=600  # 10 minutes timeout
-                )
-        
+        # Simple direct download from Dropbox
+        response = requests.get(MODEL_URL, stream=True, timeout=600)
         response.raise_for_status()
         
-        # Check if we actually got file content
+        # Check content type
         content_type = response.headers.get('content-type', '')
+        content_length = response.headers.get('content-length')
+        
+        logger.info(f"Response content-type: {content_type}")
+        logger.info(f"Expected content length: {content_length} bytes")
+        
         if 'text/html' in content_type:
             logger.error("Received HTML instead of file - download failed")
             return False
@@ -133,6 +100,9 @@ def download_model_from_drive():
         total_size = 0
         chunk_count = 0
         start_time = time.time()
+        expected_size = int(content_length) if content_length else 0
+        
+        logger.info("Starting download...")
         
         with open(MODEL_PATH, 'wb') as f:
             for chunk in response.iter_content(chunk_size=1024*1024):  # 1MB chunks
@@ -145,7 +115,8 @@ def download_model_from_drive():
                     if chunk_count % 10 == 0:
                         elapsed = time.time() - start_time
                         speed = total_size / (1024 * 1024) / elapsed if elapsed > 0 else 0
-                        logger.info(f"Downloaded {total_size / (1024*1024):.1f} MB ({speed:.1f} MB/s)")
+                        progress = (total_size / expected_size * 100) if expected_size > 0 else 0
+                        logger.info(f"Downloaded {total_size / (1024*1024):.1f} MB ({speed:.1f} MB/s) {progress:.1f}%")
         
         download_time = time.time() - start_time
         final_size_mb = total_size / (1024*1024)
@@ -161,10 +132,16 @@ def download_model_from_drive():
         
         # Save model info for caching
         save_model_info()
+        logger.info("Model download and caching successful!")
         return True
         
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error downloading model: {e}")
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
+        return False
     except Exception as e:
-        logger.error(f"Error downloading model: {e}")
+        logger.error(f"Unexpected error downloading model: {e}")
         if os.path.exists(MODEL_PATH):
             os.remove(MODEL_PATH)
         return False
@@ -172,6 +149,7 @@ def download_model_from_drive():
 def load_model_safe():
     """Safely load the model with error handling"""
     try:
+        logger.info("Loading TensorFlow model...")
         model = load_model(MODEL_PATH)
         logger.info("Model loaded successfully!")
         return model
@@ -184,7 +162,7 @@ model = None
 logger.info("Initializing Brain Tumor Detection API...")
 
 try:
-    if download_model_from_drive():
+    if download_model_from_dropbox():
         model = load_model_safe()
     else:
         logger.error("Failed to download model. API will work with limited functionality.")
@@ -215,7 +193,7 @@ def predict_image(image_path):
         if predicted_label.lower() == 'notumor':
             result = "No Tumor"
         else:
-            result = f"Tumor Found: {predicted_label}"
+            result = f"Tumor Found: {predicted_label.capitalize()}"
         
         return {
             "result": result,
@@ -230,19 +208,25 @@ def predict_image(image_path):
 def home():
     """Root endpoint"""
     return jsonify({
-        "message": "Brain Tumor Detection API",
+        "message": "🧠 Brain Tumor Detection API",
         "status": "healthy",
+        "version": "1.0.0",
         "model_loaded": model is not None,
         "model_cached": is_model_valid(),
         "endpoints": {
             "/health": "Check API health",
-            "/predict": "Upload image for prediction (POST)"
+            "/predict": "Upload image for prediction (POST)",
+            "/download-model": "Manual model download (POST)"
         }
     })
 
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    model_size_mb = 0
+    if os.path.exists(MODEL_PATH):
+        model_size_mb = round(os.path.getsize(MODEL_PATH) / (1024*1024), 2)
+    
     return jsonify({
         "status": "healthy",
         "model_loaded": model is not None,
@@ -250,7 +234,8 @@ def health_check():
         "class_labels": class_labels,
         "model_path": MODEL_PATH,
         "model_exists": os.path.exists(MODEL_PATH),
-        "model_size_mb": round(os.path.getsize(MODEL_PATH) / (1024*1024), 2) if os.path.exists(MODEL_PATH) else 0
+        "model_size_mb": model_size_mb,
+        "model_source": "Dropbox"
     })
 
 @app.route('/predict', methods=['POST'])
@@ -317,17 +302,24 @@ def download_model_endpoint():
         logger.info("Manual model download triggered")
         global model
         
-        if download_model_from_drive():
+        # Remove existing model files
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
+        if os.path.exists(MODEL_INFO_PATH):
+            os.remove(MODEL_INFO_PATH)
+        
+        if download_model_from_dropbox():
             model = load_model_safe()
             return jsonify({
                 "success": True,
-                "message": "Model downloaded and loaded successfully",
-                "model_loaded": model is not None
+                "message": "Model downloaded and loaded successfully from Dropbox",
+                "model_loaded": model is not None,
+                "model_size_mb": round(os.path.getsize(MODEL_PATH) / (1024*1024), 2) if os.path.exists(MODEL_PATH) else 0
             })
         else:
             return jsonify({
                 "success": False,
-                "message": "Failed to download model"
+                "message": "Failed to download model from Dropbox"
             }), 500
             
     except Exception as e:
@@ -350,7 +342,7 @@ def bad_gateway(error):
 def service_unavailable(error):
     return jsonify({"error": "Service temporarily unavailable - model loading"}), 503
 
-# At the end of your __main__ section, add better error handling:
+# Enhanced startup with better error handling
 if __name__ == '__main__':
     try:
         # Create uploads directory
@@ -358,20 +350,24 @@ if __name__ == '__main__':
         
         port = int(os.environ.get('PORT', 5000))
         
-        logger.info("=" * 50)
-        logger.info("Brain Tumor Detection API Starting")
-        logger.info("=" * 50)
+        logger.info("=" * 60)
+        logger.info("🧠 Brain Tumor Detection API Starting")
+        logger.info("=" * 60)
         logger.info(f"Port: {port}")
+        logger.info(f"Model source: Dropbox")
         logger.info(f"Model loaded: {model is not None}")
         logger.info(f"Model cached: {is_model_valid()}")
         logger.info(f"Class labels: {class_labels}")
-        logger.info("=" * 50)
+        logger.info("=" * 60)
         
         if model is None:
             logger.warning("⚠️  WARNING: Model not loaded! API will return errors for predictions.")
-            logger.info("💡 You can try manual download at POST /download-model")
+            logger.info("💡 Try manual download: POST /download-model")
         else:
             logger.info("✅ Model ready for predictions!")
+            logger.info(f"📊 Model size: {round(os.path.getsize(MODEL_PATH) / (1024*1024), 2)} MB")
+        
+        logger.info("🚀 Starting Flask server...")
         
         # Start the app even if model loading failed
         app.run(host='0.0.0.0', port=port, debug=False)
