@@ -17,10 +17,9 @@ app = Flask(__name__)
 
 # Configure CORS for production (update with your actual frontend URL after deployment)
 CORS(app, origins=[
-    "https://*.onrender.com",  # Allow all Render domains
+    "https://brain-tumor-frontend.onrender.com",  # Your actual frontend URL
     "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5000"
+    "http://localhost:5173"
 ])
 
 # Model configuration
